@@ -76,12 +76,3 @@ const setChartTo = (pct) => {
     monCamembert.data.datasets[0].data = [val, 100 - val];
     monCamembert.update();
 };
-
-// 1. Initialise la connexion avec le serveur Node.js
-const socket = io();
-
-// 2. Écoute l'événement 'update-gauge' envoyé par le serveur
-socket.on('update-gauge', (valeur) => {
-    console.log("Nouvelle valeur reçue :", valeur);
-    setChartTo(valeur); // Appelle ta fonction existante
-});

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Interface Web</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="chart.js"></script>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="left-section">
+            <div class="panel top-panel">
+                <h2>Zone Haut</h2>
+            </div>
+            <div class="panel bottom-panel">
+                <h2>Zone Bas</h2>
+            </div>
+        </div>
+
+        <div class="right-square">
+            <canvas id="monGraphique"></canvas>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

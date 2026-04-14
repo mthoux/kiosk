@@ -1,0 +1,70 @@
+/* Reset basique pour occuper tout l'écran */
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: sans-serif;
+    overflow: hidden; /* Empêche le scroll inutile */
+}
+
+/* Le conteneur principal occupe tout l'écran */
+.main-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: #f0f0f0;
+}
+
+/* Partie gauche : prend tout l'espace disponible */
+.left-section {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    /* On s'assure que la section occupe toute la hauteur pour calculer le carré */
+    height: 100vh; 
+}
+
+/* Style commun pour les panneaux de gauche */
+.panel {
+    flex: 1; /* Chaque panneau prend 50% de la hauteur */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #2c3e50;
+}
+
+.top-panel {
+    flex: 1; /* Prend tout l'espace restant en haut */
+    background-color: #ecf0f1;
+}
+
+.bottom-panel {
+    /* Magie : On lie la hauteur à la largeur du conteneur parent */
+    width: 100%;
+    aspect-ratio: 1 / 1; 
+    background-color: #bdc3c7;
+    flex-shrink: 0; /* Empêche le panneau de s'écraser si le haut prend trop de place */
+}
+
+/* Partie droite : zone carrée basée sur la hauteur */
+.right-square {
+    height: 100vh;
+    aspect-ratio: 1 / 1; /* Force la forme carrée */
+    background-color: #ffffff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #2c3e50;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}

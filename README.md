@@ -73,3 +73,19 @@ Updates the displayed animation (from the web/gifs folder).
 2. **HTTP Request:** An external client (like a firmware or terminal) sends an HTTP GET request to the Node.js server.
 3. **Server Relay:** The server captures the route, extracts parameters, and uses io.emit() to broadcast the data to all connected clients via WebSockets.
 4. **Kiosk Update:** The web interface receives the event through the open socket and updates the DOM (Document Object Model) immediately without a page refresh.
+
+
+
+WORKING ON RASPBERRY PI 3 V1.2
+OS : Raspberry Pi OS (Legacy, 32 bit)
+
+Kiosk config 
+
+autostart script dans home/admin/.config/labwc/autostart
+rmeettre l ecran droit dans ...
+
+addresse ethernet 10.0.0.2
+
+
+!!!!
+chmod +x autolaunch.sh

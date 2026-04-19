@@ -79,6 +79,10 @@ const mainChart = new Chart(ctx, {
     },
     options: {
         responsive: true,
+        animation: {
+            duration: 800,      // Animation plus courte (800ms au lieu de 1000ms)
+            easing: 'easeOutQuart' // Un calcul mathématique plus simple que le "bounce" par défaut
+        },
         layout: { padding: 50 },
         plugins: { tooltip: false, legend: false },
         events: []

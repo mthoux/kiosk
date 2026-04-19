@@ -1,17 +1,17 @@
 /**
- * Change le GIF en donnant simplement son nom
- * @param {string} name - Le nom du fichier (ex: 'red-gear')
+ * @file gif.js
+ * @description Handles the dynamic updating of GIF assets on the kiosk display.
  */
-window.changeGif = (name) => {
+
+/**
+ * Updates the source of the main GIF element.
+ * @param {string} name - The filename (without extension) located in the /gifs folder.
+ */
+window.updateGif = (name) => {
     const stateGif = document.getElementById('state-gif');
-    
     if (stateGif) {
-        // On construit l'URL complète ici : dossier + nom + extension + cache-bust
-        const url = `gifs/${name}.gif?t=${Date.now()}`;
-        stateGif.src = url;
-        
-        console.log(`GIF mis à jour : ${url}`);
-    } else {
-        console.error("L'élément #state-gif est introuvable.");
+
+        // Adding a timestamp ?t= to the URL prevents the browser from using a cached version, forcing the GIF to restart from the beginning.
+        stateGif.src = `gifs/${name}.gif?t=${Date.now()}`;
     }
 };

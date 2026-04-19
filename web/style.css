@@ -1,4 +1,4 @@
-/* Reset basique pour occuper tout l'écran */
+/* Basic reset to occupy the full screen */
 * {
     box-sizing: border-box;
 }
@@ -9,10 +9,10 @@ body, html {
     height: 100%;
     width: 100%;
     font-family: sans-serif;
-    overflow: hidden; /* Empêche le scroll inutile */
+    overflow: hidden; /* Prevents unnecessary scrolling */
 }
 
-/* Le conteneur principal occupe tout l'écran */
+/* The main container occupies the entire screen */
 .main-container {
     display: flex;
     height: 100vh;
@@ -20,18 +20,18 @@ body, html {
     background-color: #f0f0f0;
 }
 
-/* Partie gauche : prend tout l'espace disponible */
+/* Left part: takes up all available space */
 .left-section {
     flex: 1; 
     display: flex;
     flex-direction: column;
-    /* On s'assure que la section occupe toute la hauteur pour calculer le carré */
+    /* Ensures the section occupies the full height to calculate the square */
     height: 100vh; 
 }
 
-/* Style commun pour les panneaux de gauche */
+/* Common style for the left panels */
 .panel {
-    flex: 1; /* Chaque panneau prend 50% de la hauteur */
+    flex: 1; /* Each panel takes 50% of the height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -39,23 +39,23 @@ body, html {
 }
 
 .top-panel {
-    flex: 1; /* Prend tout l'espace restant en haut */
+    flex: 1; /* Takes all remaining space at the top */
     background-color: #ecf0f1;
 }
 
 .bottom-panel {
-    /* Magie : On lie la hauteur à la largeur du conteneur parent */
+    /* Magic: Link the height to the width of the parent container */
     width: 100%;
     aspect-ratio: 1 / 1; 
     background-color: #bdc3c7;
-    flex-shrink: 0; /* Empêche le panneau de s'écraser si le haut prend trop de place */
+    flex-shrink: 0; /* Prevents the panel from collapsing if the top takes too much space */
     position: relative;
 }
 
-/* Partie droite : zone carrée basée sur la hauteur */
+/* Right part: square zone based on height */
 .right-square {
     height: 100vh;
-    aspect-ratio: 1 / 1; /* Force la forme carrée */
+    aspect-ratio: 1 / 1; /* Forces the square shape */
     background-color: #ffffff;
     color: white;
     display: flex;
@@ -66,7 +66,7 @@ body, html {
 
 h2 {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 2.5rem;
     text-transform: uppercase;
 }
 

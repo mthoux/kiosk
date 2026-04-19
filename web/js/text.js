@@ -1,13 +1,15 @@
 /**
- * Change le texte du titre principal
- * @param {string} newText - Le nouveau texte à afficher
+ * @file text.js
+ * @description Manages text updates for the kiosk display.
  */
-window.updateTitle = (newText) => {
+
+/**
+ * Updates the text content.
+ * @param {string} newText - The string to be displayed on the screen.
+ */
+window.updateText = (newText) => {
     const titleElement = document.getElementById('text');
     if (titleElement) {
         titleElement.textContent = newText;
-        console.log(`Titre mis à jour : ${newText}`);
-    } else {
-        console.error("L'élément #text est introuvable.");
     }
 };

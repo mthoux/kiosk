@@ -1,9 +1,18 @@
+/**
+ * @file gauge.js
+ * @description Configures and manages the Doughnut chart using Chart.js.
+ */
+
 const ctx = document.getElementById('monGraphique').getContext('2d');
 const PI2 = Math.PI * 2;
 
-const gaugePlugins = {
+/**
+ * Custom plugin to draw the gauge background and scale markings
+ */
+const gaugeCustomPlugin = {
     id: 'gaugeCustom',
 
+    // Draws the black center circle
     beforeDraw: (chart) => {
         const { ctx, chartArea: { left, right, top, bottom } } = chart;
         const meta = chart.getDatasetMeta(0).data[0];
@@ -18,9 +27,11 @@ const gaugePlugins = {
         ctx.restore();
     },
 
+    // Draws the ticks and percentage labels around the chart
     afterDraw: (chart) => {
         const { ctx, chartArea: { left, right, top, bottom } } = chart;
-        const centerX = (left + right) / 2, centerY = (top + bottom) / 2;
+        const centerX = (left + right) / 2;
+        const centerY = (top + bottom) / 2;
         const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
 
         ctx.save();
@@ -32,26 +43,30 @@ const gaugePlugins = {
             const isMajor = i % 10 === 0;
             const angle = (i / 100) * PI2 - Math.PI / 2;
             const length = isMajor ? 15 : 8;
-            const cos = Math.cos(angle), sin = Math.sin(angle);
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
 
-            // Traits
+            // Draw scale ticks
             ctx.lineWidth = isMajor ? 3 : 1;
             ctx.beginPath();
             ctx.moveTo(centerX + cos * outerRadius, centerY + sin * outerRadius);
             ctx.lineTo(centerX + cos * (outerRadius + length), centerY + sin * (outerRadius + length));
             ctx.stroke();
 
-            // Chiffres
+            // Draw numeric labels
             if (isMajor) {
-                const dist = outerRadius + length + 20;
-                ctx.fillText(i === 100 ? 0 : i, centerX + cos * dist, centerY + sin * dist);
+                const labelDistance = outerRadius + length + 20;
+                ctx.fillText(i === 100 ? 0 : i, centerX + cos * labelDistance, centerY + sin * labelDistance);
             }
         }
         ctx.restore();
     }
 };
 
-const monCamembert = new Chart(ctx, {
+/**
+ * Global Chart instance
+ */
+const mainChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
         datasets: [{
@@ -68,11 +83,15 @@ const monCamembert = new Chart(ctx, {
         plugins: { tooltip: false, legend: false },
         events: []
     },
-    plugins: [gaugePlugins]
+    plugins: [gaugeCustomPlugin]
 });
 
-const setChartTo = (pct) => {
-    const val = Math.max(0, Math.min(pct, 100));
-    monCamembert.data.datasets[0].data = [val, 100 - val];
-    monCamembert.update();
+/**
+ * Updates the chart completion percentage
+ * @param {number} pct - Percentage value (0 to 100)
+ */
+window.updateGauge = (pct) => {
+    const value = Math.max(0, Math.min(pct, 100));
+    mainChart.data.datasets[0].data = [value, 100 - value];
+    mainChart.update();
 };

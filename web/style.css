@@ -1,7 +1,22 @@
-/* Basic reset to occupy the full screen */
+/**
+ * @file style.css
+ * @description Main stylesheet for the kiosk interface, featuring a split-screen 
+ * layout with a responsive text/gif section and a specialized circular gauge.
+ */
+
+/* Global Variables */
+:root {
+    --bg-color: #f0f0f0;
+    --panel-bg: #ecf0f1;
+    --border-color: #2c3e50;
+    --gauge-red: #db3434;
+    --pct: 0%; /* Dynamic variable controlled by gauge.js */
+}
+
+/* Global Reset */
 * {
     box-sizing: border-box;
-    cursor: none !important; /* Hide cursor */
+    cursor: none !important; /* Hide cursor for kiosk touch/display experience */
 }
 
 body, html {
@@ -10,78 +25,115 @@ body, html {
     height: 100%;
     width: 100%;
     font-family: sans-serif;
-    overflow: hidden; /* Prevents unnecessary scrolling */
-    cursor: none !important; /* Hide cursor */
+    overflow: hidden; /* Prevent scrolling on the kiosk interface */
+    background-color: var(--bg-color);
 }
 
-/* The main container occupies the entire screen */
+/* Layout Containers */
 .main-container {
     display: flex;
     height: 100vh;
-    width: 100vw;
-    background-color: #f0f0f0;
 }
 
-/* Left part: takes up all available space */
 .left-section {
-    flex: 1; 
+    flex: 1; /* Occupies all remaining horizontal space */
     display: flex;
     flex-direction: column;
-    /* Ensures the section occupies the full height to calculate the square */
-    height: 100vh; 
 }
 
-/* Common style for the left panels */
 .panel {
-    flex: 1; /* Each panel takes 50% of the height */
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #2c3e50;
+    border: 2px solid var(--border-color);
 }
 
 .top-panel {
-    flex: 1; /* Takes all remaining space at the top */
-    background-color: #ecf0f1;
+    background-color: var(--panel-bg);
 }
 
 .bottom-panel {
-    /* Magic: Link the height to the width of the parent container */
     width: 100%;
-    aspect-ratio: 1 / 1; 
-    background-color: #bdc3c7;
-    flex-shrink: 0; /* Prevents the panel from collapsing if the top takes too much space */
+    aspect-ratio: 1 / 1; /* Ensures the GIF area remains a perfect square */
+    flex-shrink: 0;      /* Prevents collapsing if the top panel expands */
     position: relative;
+    background-color: #bdc3c7;
 }
 
-/* Right part: square zone based on height */
 .right-square {
     height: 100vh;
-    aspect-ratio: 1 / 1; /* Forces the square shape */
-    background-color: #ffffff;
-    color: white;
+    aspect-ratio: 1 / 1; /* Forces the gauge area to be a square based on screen height */
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid #2c3e50;
+    border: 2px solid var(--border-color);
+    background: white;
 }
 
+/* Content Styles */
 h2 {
     margin: 0;
     font-size: 2.5rem;
     text-transform: uppercase;
 }
 
-#gif-container {
+#state-gif {
     width: 100%;
     height: 100%;
+    object-fit: contain; /* Ensures the GIF fits without being cropped */
+}
+
+/* Gauge Components */
+.gauge-wrapper {
+    position: relative;
+    width: 90%;
+    height: 90%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-#state-gif {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
+.gauge-fill {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: var(--gauge-red);
+    
+    /* Creates the "pie slice" effect using the dynamic --pct variable */
+    -webkit-mask-image: conic-gradient(black var(--pct), transparent 0%);
+    mask-image: conic-gradient(black var(--pct), transparent 0%);
+    
+    outline: 4px solid black;
+    outline-offset: -2px;
+    transition: --pct 0.8s ease-out; /* Smooth animation when updating values */
+    z-index: 1;
+}
+
+.gauge-center {
+    position: absolute;
+    width: 7%;
+    height: 7%;
+    background: black;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+.gauge-scale {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 3;
+    overflow: visible; /* Allows tick labels to be visible outside the SVG bounds */
+}
+
+/**
+ * Registering the --pct custom property allows CSS to animate 
+ * percentage values smoothly, which is not possible with standard CSS variables.
+ */
+@property --pct {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 0%;
 }

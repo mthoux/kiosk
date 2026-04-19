@@ -7,7 +7,6 @@
     <title>Kiosk</title>
     <link rel="stylesheet" href="style.css">
     <script src="/socket.io/socket.io.js"></script>
-    <script src="js/inc/chart.js"></script>
 </head>
 <body>
 
@@ -24,7 +23,15 @@
         </div>
 
         <div class="right-square">
-            <canvas id="monGraphique"></canvas>
+            <div class="gauge-wrapper">
+                <svg class="gauge-scale" viewBox="0 0 200 200">
+                    <g id="ticks"></g> 
+                </svg>
+                
+                <div class="gauge-fill" id="gaugeFill"></div>
+                
+                <div class="gauge-center"></div>
+            </div>
         </div>
     </div>
 

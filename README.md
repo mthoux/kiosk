@@ -4,6 +4,7 @@ A real-time interactive display system powered by Node.js. This project allows a
 
 ## 📂 Project Structure
 
+```
 .
 ├── README.md
 ├── kiosk.sh                # Main management script (Start/Stop)
@@ -21,6 +22,7 @@ A real-time interactive display system powered by Node.js. This project allows a
         ├── gif.js          # GIF switching logic
         ├── text.js         # Text update logic
         └── inc/            # Included libraries (Chart.js, etc.)
+```
 
 ## 🚀 Getting Started
 

@@ -21,7 +21,6 @@ A real-time interactive display system powered by Node.js. This project allows a
         ├── gauge.js        # Gauge rendering logic
         ├── gif.js          # GIF switching logic
         ├── text.js         # Text update logic
-        └── inc/            # Included libraries (Chart.js, etc.)
 ```
 
 ## 🚀 Getting Started
@@ -76,7 +75,7 @@ Updates the displayed animation (from the web/gifs folder).
 
 
 
-WORKING ON RASPBERRY PI 3 V1.2
+WORKING ON RASPBERRY PI 3 Model B V1.2
 OS : Raspberry Pi OS (Legacy, 32 bit)
 
 Kiosk config 

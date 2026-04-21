@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,34 +10,49 @@
 </head>
 <body>
 
-    <div class="main-container">
-        <div class="left-section">
-            <div class="panel top-panel">
-                <h2 id="text">Text Zone</h2>
-            </div>
+    <main class="main-container">
+        <section class="left-section">
+            <div class="panel top-panel"><h2 id="text">Instruction</h2></div>
             <div class="panel bottom-panel">
-                <div id="gif-container">
-                    <img id="state-gif" src="gifs/idle.gif" alt="" style="width: 100%; height: 100%; object-fit: cover;">
-                </div>
+                <img id="state-gif" src="gifs/idle.gif" alt="GIFs">
             </div>
-        </div>
+        </section>
 
-        <div class="right-square">
+        <section class="right-square">
             <div class="gauge-wrapper">
-                <svg class="gauge-scale" viewBox="0 0 200 200">
-                    <g id="ticks"></g> 
+                <svg viewBox="0 0 250 250" class="gauge-svg">
+                    <defs>
+                        <filter id="outline" x="0" y="0" width="250" height="250" filterUnits="userSpaceOnUse">
+                            <feMorphology in="SourceAlpha" result="expanded" operator="dilate" radius="1.5"/>
+                            <feFlood flood-color="black" result="black"/>
+                            <feComposite in="black" in2="expanded" operator="in" result="outline"/>
+                            <feMerge>
+                                <feMergeNode in="outline"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                                        
+                    <circle cx="125" cy="125" r="80" fill="#eee" />
+                    
+                    <circle id="gauge-progress" 
+                            cx="125" cy="125" r="40" 
+                            fill="none" 
+                            stroke="var(--gauge-red)" 
+                            stroke-width="80" 
+                            filter="url(#outline)"
+                            transform="rotate(-90 125 125)" />
+
+                    <g id="ticks"></g>
                 </svg>
-                
-                <div class="gauge-fill" id="gaugeFill"></div>
-                
                 <div class="gauge-center"></div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script src="js/text.js"></script>
     <script src="js/gif.js"></script>
     <script src="js/gauge.js"></script>
     <script src="js/socket.js"></script>
 </body>
-</html>
+</html> 

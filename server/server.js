@@ -3,49 +3,75 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 
+// Logic to load i2c-bus only on Linux/Raspberry Pi
+let i2c;
+try {
+    i2c = require('i2c-bus');
+} catch (e) {
+    console.warn("⚠️ I2C bus not found. Relay commands will be simulated.");
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Serve static files from the web directory
+// I2C Configuration
+const RELAY_ADDR = 0x20; // Default address for many 4-relay modules
+const bus = i2c ? i2c.openSync(1) : null;
+
 app.use(express.static(path.join(__dirname, '../web')));
 
 /**
- * API Route: Update the main text
- * Usage: GET /update-text/Hello
+ * API Route: Update Text, Gauge and GIF (Existing logic)
  */
 app.get('/update-text/:text', (req, res) => {
-    const text = req.params.text;
-    io.emit('update-text', text);
-    res.send(`Text updated to: ${text} `);
+    io.emit('update-text', req.params.text);
+    res.send(`Text updated`);
+});
+
+app.get('/update-gauge/:value', (req, res) => {
+    let value = Math.max(0, Math.min(100, parseFloat(req.params.value) || 0));
+    io.emit('update-gauge', value);
+    res.send(`Gauge updated to ${value}%`);
+});
+
+app.get('/update-gif/:name', (req, res) => {
+    io.emit('update-gif', req.params.name);
+    res.send(`GIF updated`);
 });
 
 /**
- * API Route: Update the gauge percentage
- * Usage: GET /update-gauge/75
+ * API Route: Control 4-Channel Relays via I2C
+ * Usage: GET /relay/1/on or GET /relay/1/off
  */
-app.get('/update-gauge/:value', (req, res) => {
-    let value = parseFloat(req.params.value);
+app.get('/relay/:id/:state', (req, res) => {
+    const id = parseInt(req.params.id);
+    const state = req.params.state.toLowerCase();
     
-    if (isNaN(value)) {
-        return res.status(400).send("Value must be a number.");
+    // Validation: Only 4 relays (1 to 4)
+    if (isNaN(id) || id < 1 || id > 4) {
+        return res.status(400).send("Invalid Relay ID. Use 1, 2, 3 or 4.");
     }
 
-    // Clip the value between 0 and 100
-    value = Math.max(0, Math.min(100, value));
-    
-    io.emit('update-gauge', value);
-    res.send(`Gauge updated to: ${value}% `);
-});
+    const isOn = state === 'on';
 
-/**
- * API Route: Update the GIF state
- * Usage: GET /update-gif/blue-gear
- */
-app.get('/update-gif/:name', (req, res) => {
-    const name = req.params.name;
-    io.emit('update-gif', name);
-    res.send(`GIF updated to: ${name} `);
+    if (bus) {
+        try {
+            /**
+             * Note: The command depends on your relay board's logic.
+             * Some boards use 0xFF for ON and 0x00 for OFF.
+             */
+            const command = isOn ? 0xFF : 0x00; 
+            bus.writeByteSync(RELAY_ADDR, id, command);
+            console.log(`[I2C] Relay ${id} set to ${state}`);
+        } catch (err) {
+            return res.status(500).send(`I2C Error: ${err.message}`);
+        }
+    } else {
+        console.log(`[SIMULATION] Relay ${id} set to ${state}`);
+    }
+
+    res.send({ relay: id, status: state });
 });
 
 const PORT = 3000;

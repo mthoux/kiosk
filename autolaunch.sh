@@ -20,7 +20,7 @@ exec > "$LOG_FILE" 2>&1
 echo "--- Kiosk Startup: $(date) ---"
 echo "Configured Port: $PORT"
 
-# 3. Cleanup ghost processes
+# 3. Kill process on specified port if any
 echo "Cleaning up port $PORT..."
 fuser -k $PORT/tcp > /dev/null 2>&1
 

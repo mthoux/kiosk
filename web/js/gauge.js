@@ -115,7 +115,7 @@ function drawStaticLayer() {
 }
 
 /**
- * Draws only the moving parts (Red Arc)
+ * Draws dynamic parts (Red Arc)
  */
 function drawDynamicLayer(percent) {
     const size = cachedSize;

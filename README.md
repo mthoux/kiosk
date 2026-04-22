@@ -1,95 +1,245 @@
 # Kiosk System
 
-A real-time interactive display system powered by Node.js. This project allows a remote machine to update a web interface (gauge, text, and GIFs) instantaneously via HTTP requests.
+![Kiosk preview](images/demo.png)
 
-## 📂 Project Structure
+A lightweight real-time kiosk display powered by **Node.js**, designed to let an external device or remote machine control a fullscreen web interface through simple HTTP requests.
 
-```
+Originally built to assist users while operating a specific machine, the interface combines:
+
+* **Instruction text** for guidance
+* **Animated GIFs** for visual actions
+* **Circular progress gauge** to show remaining effort or progress
+
+The orginally used device was a **Raspberry Pi 3 Model B v1.2** running **Raspberry Pi OS (Legacy, 32-bit)**, but the project can run on most Linux devices
+
+---
+
+## Features
+
+* Real-time updates via WebSockets
+* Simple HTTP API for remote control
+* Fullscreen kiosk interface
+* Lightweight and fast
+* Easy deployment on Raspberry Pi or mini PCs
+
+---
+
+## Project Structure
+
+```text
 .
 ├── README.md
-├── kiosk.sh                # Main management script (Start/Stop)
+├── autolaunch.sh              # Starts the server and kiosk interface
 ├── server/
 │   ├── package.json
-│   ├── server.js           # Node.js server (Express + Socket.io)
-│   └── test.sh             # Testing scripts
+│   └── server.js              # Express + Socket.IO backend
 └── web/
-    ├── index.html          # Main Kiosk interface
-    ├── style.css           # Styling
-    ├── gifs/               # Asset folder for animations
-    └── js/                 # Client-side logic
-        ├── socket.js       # Socket.io connection handler
-        ├── gauge.js        # Gauge rendering logic
-        ├── gif.js          # GIF switching logic
-        ├── text.js         # Text update logic
+    ├── index.html             # Main kiosk page
+    ├── style.css              # Interface styling
+    ├── gifs/                  # Animation assets
+    └── js/
+        ├── socket.js          # WebSocket connection
+        ├── gauge.js           # Gauge rendering logic
+        ├── gif.js             # GIF switching logic
+        └── text.js            # Text update logic
 ```
 
-## 🚀 Getting Started
+---
 
-### 1. Prerequisites
-Ensure you have **Node.js** installed on your machine.
+## How It Works
 
-### 2. Installation
-Go to the server directory and install dependencies:
+The Node.js server acts as a bridge between remote commands and connected kiosk screens.
+
+### Workflow
+
+1. A browser opens the kiosk interface.
+2. The interface connects to the server using WebSockets.
+3. A remote device sends an HTTP request.
+4. The server receives the request and broadcasts the update instantly.
+5. All connected kiosk screens refresh in real time without reloading.
+
+---
+
+## Requirements
+
+Before installation, make sure you have:
+
+* **Node.js** installed
+* A Linux system (recommended)
+* A browser such as Chromium
+
+---
+
+## Installation
+
+### 1. Clone the Project
+
+```bash
+git clone <your-repository-url>
+cd kiosk
+```
+
+### 2. Install Dependencies
+
+```bash
 cd server
 npm install
+```
 
-### 3. Management (kiosk.sh)
-The project includes a management script at the root to handle the server and browser automatically.
+### 3. Install Cage
 
-**First time only, make it executable:**
-chmod +x kiosk.sh
+Cage is a minimal Wayland compositor ideal for launching a single fullscreen application.
 
-**To start the server and open the interface:**
-./kiosk.sh start
+```bash
+sudo apt update
+sudo apt install cage
+```
 
-**To stop the server and free the port:**
-./kiosk.sh stop
+### 4. Make the Launch Script Executable
 
-*Note: You can also access the interface manually at http://localhost:3000 or http://[your-ip]:3000*
+```bash
+chmod +x autolaunch.sh
+```
 
-## 🕹️ Remote Control (API Routes)
+---
 
-The system acts as a relay. Send HTTP GET requests to these endpoints to update the Kiosk in real-time:
+## Auto Start on Boot
+
+To automatically launch the kiosk when the device starts, edit your shell profile:
+
+```bash
+nano ~/.bash_profile
+```
+
+Add:
+
+```bash
+if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
+  exec cage ./autolaunch.sh
+fi
+```
+
+This will checks that no graphical session is already running. Ensures login is on virtual terminal **TTY1**. Launches Cage in fullscreen mode and runs your kiosk automatically at boot
+
+This prevents multiple sessions from starting the kiosk accidentally.
+
+---
+
+## Running the Project
+
+### Start Manually
+
+```bash
+./autolaunch.sh
+```
+
+### Or Reboot the Device
+
+If auto-start is configured, the kiosk will launch automatically.
+
+---
+
+## Accessing the Interface
+
+From any device on the network, open:
+
+```text
+http://[DEVICE-HOSTING-SERVER-IP]:3000
+```
+
+Replace `3000` if you changed the port inside `autolaunch.sh` or `server.js`.
+
+---
+
+## Remote Control API
+
+The server accepts HTTP GET requests and pushes updates instantly to all connected clients.
 
 ### Update Gauge
-Updates the circular gauge percentage (0-100).
-- URL: http://localhost:3000/update-gauge/:value
-- Example: curl http://localhost:3000/update-gauge/85
+
+Set the progress gauge from **0 to 100**.
+
+```http
+GET /update-gauge/:value
+```
+
+Example:
+
+```bash
+curl http://localhost:3000/update-gauge/85
+```
+
+---
 
 ### Update Text
-Updates the main displayed text.
-- URL: http://localhost:3000/update-text/:text
-- Example: curl http://localhost:3000/update-text/System-Active
+
+Change the displayed instruction text.
+
+```http
+GET /update-text/:text
+```
+
+Example:
+
+```bash
+curl http://localhost:3000/update-text/STOP
+```
+
+---
 
 ### Update GIF
-Updates the displayed animation (from the web/gifs folder).
-- URL: http://localhost:3000/update-gif/:name
-- Example: curl http://localhost:3000/update-gif/red-gear
 
-## ⚙️ Technical Overview
+Switch the displayed animation.
 
-1. **Client Connection:** The web browser connects to the server. A persistent WebSocket session is established between the client and the server.
-2. **HTTP Request:** An external client (like a firmware or terminal) sends an HTTP GET request to the Node.js server.
-3. **Server Relay:** The server captures the route, extracts parameters, and uses io.emit() to broadcast the data to all connected clients via WebSockets.
-4. **Kiosk Update:** The web interface receives the event through the open socket and updates the DOM (Document Object Model) immediately without a page refresh.
+```http
+GET /update-gif/:name
+```
 
+Example:
 
+```bash
+curl http://localhost:3000/update-gif/demo
+```
 
-WORKING ON RASPBERRY PI 3 Model B V1.2
-OS : Raspberry Pi OS (Legacy, 32 bit)
+This will typically load:
 
-Kiosk config 
+```text
+web/gifs/demo.gif
+```
 
-autostart script dans home/admin/.config/labwc/autostart
-rmeettre l ecran droit dans ...
+(depending on your implementation)
 
-addresse ethernet 10.0.0.2
+---
 
+### Relay Control
 
-!!!!
-chmod +x autolaunch.sh
-!!!!!
+Coming soon.
 
-Cage 
+---
 
-~/.bash-profile -> 
+## Recommended Optimizations for Raspberry Pi
+
+If using a Raspberry Pi or similar device:
+
+* Disable unused desktop environments
+* Boot directly to console mode
+* Use lightweight browser flags
+* Reduce background services
+* Use wired Ethernet for stable communication
+
+## License
+
+This project is licensed under the MIT License.
+Copyright © 2026 Mathys Bitsch.
+
+---
+
+## Summary
+
+This project transforms any small computer into a remotely controlled smart display using only:
+
+* Node.js
+* A browser
+* Simple HTTP requests
+
+Reliable, lightweight, and ideal for embedded kiosk systems.

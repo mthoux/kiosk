@@ -8,10 +8,10 @@
  * @param {string} name - The filename (without extension) located in the /gifs folder.
  */
 window.updateGif = (name) => {
-    const stateGif = document.getElementById('state-gif');
-    if (stateGif) {
-
-        // Adding a timestamp ?t= to the URL prevents the browser from using a cached version, forcing the GIF to restart from the beginning.
-        stateGif.src = `gifs/${name}.gif?t=${Date.now()}`;
+    const stateGif = document.getElementById('gif');
+    const newSrc = `gifs/${name}.gif`; // On définit le nouveau chemin ici
+    
+    if (stateGif && stateGif.getAttribute('src') !== newSrc) {
+        stateGif.src = newSrc;
     }
 };

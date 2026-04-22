@@ -8,7 +8,7 @@ let i2c;
 try {
     i2c = require('i2c-bus');
 } catch (e) {
-    console.warn("⚠️ I2C bus not found. Relay commands will be simulated.");
+    console.warn("⚠️ I2C bus not found. Relay commands will be simulated.\n");
 }
 
 const app = express();
@@ -26,18 +26,18 @@ app.use(express.static(path.join(__dirname, '../web')));
  */
 app.get('/update-text/:text', (req, res) => {
     io.emit('update-text', req.params.text);
-    res.send(`Text updated`);
+    res.send(`Text updated\n`);
 });
 
 app.get('/update-gauge/:value', (req, res) => {
     let value = Math.max(0, Math.min(100, parseFloat(req.params.value) || 0));
     io.emit('update-gauge', value);
-    res.send(`Gauge updated to ${value}%`);
+    res.send(`Gauge updated to ${value}%\n`);
 });
 
 app.get('/update-gif/:name', (req, res) => {
     io.emit('update-gif', req.params.name);
-    res.send(`GIF updated`);
+    res.send(`GIF updated\n`);
 });
 
 /**
@@ -50,7 +50,7 @@ app.get('/relay/:id/:state', (req, res) => {
     
     // Validation: Only 4 relays (1 to 4)
     if (isNaN(id) || id < 1 || id > 4) {
-        return res.status(400).send("Invalid Relay ID. Use 1, 2, 3 or 4.");
+        return res.status(400).send("Invalid Relay ID. Use 1, 2, 3 or 4.\n");
     }
 
     const isOn = state === 'on';
@@ -65,16 +65,18 @@ app.get('/relay/:id/:state', (req, res) => {
             bus.writeByteSync(RELAY_ADDR, id, command);
             console.log(`[I2C] Relay ${id} set to ${state}`);
         } catch (err) {
-            return res.status(500).send(`I2C Error: ${err.message}`);
+            return res.status(500).send(`I2C Error: ${err.message}\n`);
         }
     } else {
         console.log(`[SIMULATION] Relay ${id} set to ${state}`);
     }
 
-    res.send({ relay: id, status: state });
+    res.send(JSON.stringify({ relay: id, status: state }) + '\n');
 });
 
-const PORT = 3000;
+// Default port is 3000 if not specified
+const PORT = process.env.PORT || 3000;
+
 server.listen(PORT, () => {
-    console.log(`✅ Kiosk Server running on http://localhost:${PORT}`);
+    console.log(`✅ Kiosk Server running on http://localhost:${PORT}\n`);
 });

@@ -88,3 +88,8 @@ addresse ethernet 10.0.0.2
 
 !!!!
 chmod +x autolaunch.sh
+!!!!!
+
+Cage 
+
+~/.bash-profile -> 

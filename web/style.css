@@ -1,52 +1,115 @@
+/**
+ * @file styles.css
+ * @description Layout configuration for the dashboard
+ */
+
 :root {
+    /* Color Palette */
     --bg-color: #f0f0f0;
     --top-panel-bg: #ecf0f1;
-    --bottom-panel-bg: #bdc3c7;
-    --border-color: #2c3e50;
+    --bottom-panel-bg: #d6dde2;
+    --border-color: #000000;
     --gauge-red: #cc3030;
+    
+    /* Global Settings */
+    --standard-border: 3px solid var(--border-color);
 }
 
 * {
     box-sizing: border-box;
+    /* Forced hidden cursor */
     cursor: none !important;
 }
 
 body, html {
-    margin: 0; padding: 0;
-    height: 100%; width: 100%;
-    font-family: sans-serif;
-    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden; 
     background-color: var(--bg-color);
 }
 
-.main-container { display: flex; height: 100vh; }
-.left-section { flex: 1; display: flex; flex-direction: column; }
-.panel { flex: 1; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border-color); }
-.top-panel { background-color: var(--top-panel-bg); }
-.bottom-panel { width: 100%; aspect-ratio: 1 / 1; flex-shrink: 0; background-color: var(--bottom-panel-bg); }
+/**
+ * MAIN LAYOUT
+ */
+.main-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
 
+/**
+ * LEFT SECTION
+ */
+.left-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; 
+}
+
+.panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--standard-border);
+}
+
+.top-panel {
+    background-color: var(--top-panel-bg);
+    overflow: hidden;
+    min-width: 0;
+}
+
+/**
+ * Instruction text style
+ */
+.top-panel h2 {
+    margin: 0;
+    padding: 0 20px;
+    font-size: 2.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.bottom-panel {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+    position: relative;
+    background-color: var(--bottom-panel-bg);
+    border: var(--standard-border);
+}
+
+/**
+ * RIGHT SECTION
+ */
 .right-square {
-    height: 100vh; aspect-ratio: 1 / 1;
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid var(--border-color);
-    background: white;
+    height: 100vh;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--standard-border);
+    background: #ffffff;
+    position: relative;
 }
 
-h2 { font-size: 2.5rem; text-transform: uppercase; }
-#state-gif { width: 100%; height: 100%; object-fit: contain; }
-
-.gauge-wrapper { position: relative; width: 90%; height: 90%; }
-.gauge-svg { width: 100%; height: 100%; overflow: visible; }
-
-#gauge-progress {
-    transition: stroke-dasharray 0.8s ease-out;
-}
-
-.gauge-center {
+.right-square canvas {
     position: absolute;
-    top: 50%; left: 50%;
+    top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
-    width: 7%; height: 7%;
-    background: black;
-    border-radius: 50%;
 }

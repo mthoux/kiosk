@@ -169,8 +169,6 @@ Example:
 curl http://localhost:3000/update-gauge/85
 ```
 
----
-
 ### Update Text
 
 Change the displayed instruction text.
@@ -184,8 +182,6 @@ Example:
 ```bash
 curl http://localhost:3000/update-text/STOP
 ```
-
----
 
 ### Update GIF
 
@@ -209,8 +205,6 @@ web/gifs/demo.gif
 
 (depending on your implementation)
 
----
-
 ### Relay Control
 
 Coming soon.
@@ -226,6 +220,8 @@ If using a Raspberry Pi or similar device:
 * Use lightweight browser flags
 * Reduce background services
 * Use wired Ethernet for stable communication
+
+---
 
 ## License
 

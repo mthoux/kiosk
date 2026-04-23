@@ -11,10 +11,10 @@ LOG_RETENTION_DAYS=5
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-# 2. Log Configuration (Year-Month-Day-Hour-Minute-Second)
+# 2. Log Configuration (YearMonthDay-HourMinute)
 mkdir -p "$DIR/logs"
 find "$DIR/logs" -name "log-*.txt" -mtime +$LOG_RETENTION_DAYS -delete
-LOG_FILE="$DIR/logs/log-$(date +'%Y-%m-%d-%H%M%S').txt"
+LOG_FILE="$DIR/logs/log-$(date +'%Y%m%d-%H%M').txt"
 exec > "$LOG_FILE" 2>&1
 
 echo "--- Kiosk Startup: $(date) ---"

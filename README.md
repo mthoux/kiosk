@@ -46,8 +46,6 @@ The originally used device was a **Raspberry Pi 3 Model B v1.2** running **Raspb
 
 ---
 
----
-
 ## How It Works
 
 The Node.js server acts as a bridge between remote commands (via MQTT or HTTP) and connected kiosk screens.

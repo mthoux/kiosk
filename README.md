@@ -135,6 +135,18 @@ Comming soon
 
 ---
 
+## Debugging Web in Browser
+
+Here are some tips to help you debug the web page in the browser:
+
+* **Make Your Cursor Visible:** Remove the line `cursor: none !important;` from the CSS file to ensure your cursor is visible on the page.
+* **Use Console Functions:** You can call the following functions directly in the JavaScript console to update the interface on the fly:
+  * `updateText("text")`
+  * `updateGif("gif-name-without-extension")`
+  * `updateGauge(value)`
+
+---
+
 ## License
 
 This project is licensed under the MIT License.

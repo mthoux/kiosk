@@ -3,11 +3,14 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const mqtt = require('mqtt');
+const { SerialPort } = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline');
 
 // --- CONFIGURATION ---
 const PORT = process.env.PORT || 3000;
-const RELAY_ADDR = 0x20; 
 const BROKER_URL = 'mqtt://10.0.0.X'; // Replace with your computer's IP
+const USB_PORT_PATH = '/dev/ttyUSB0';  // Update to match your USB port (e.g., 'COM3' on Windows)
+
 const TOPICS = {
     GAUGE: 'kiosk-update-gauge',
     TEXT: 'kiosk-update-text',
@@ -19,89 +22,117 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Hardware: I2C Logic for Raspberry Pi
-let i2c;
-let bus = null;
-try {
-    i2c = require('i2c-bus');
-    bus = i2c.openSync(1);
-    console.log("✅ I2C Bus initialized.");
-} catch (e) {
-    console.warn("⚠️ I2C bus not found. Relay commands will be simulated.\n");
-}
+// --- SECURITY MIDDLEWARE: LOCK DOWN THE WEB PAGE ---
+app.use((req, res, next) => {
+    const remoteAddress = req.socket.remoteAddress;
+    if (remoteAddress === '::1' || remoteAddress === '127.0.0.1' || remoteAddress === '::ffff:127.0.0.1') {
+        next(); 
+    } else {
+        console.warn(`🛑 Blocked external browser connection attempt from IP: ${remoteAddress}`);
+        res.status(403).send('Forbidden: This kiosk interface can only be viewed on the local machine.');
+    }
+});
 
-// Static Files
+// Static Files - Serves your UI assets locally
 app.use(express.static(path.join(__dirname, '../web')));
 
-// --- MQTT CLIENT LOGIC ---
+
+// --- PIPELINE HANDLER FUNCTION ---
+function forwardDataToScreen(type, payload) {
+    switch (type.toUpperCase()) {
+        case 'GAUGE':
+            const val = Math.max(0, Math.min(100, parseFloat(payload) || 0));
+            io.emit('update-gauge', val);
+            break;
+        case 'TEXT':
+            io.emit('update-text', payload);
+            break;
+        case 'GIF':
+            io.emit('update-gif', payload);
+            break;
+        default:
+            console.warn(`⚠️ Unknown data type: ${type}`);
+    }
+}
+
+
+// --- 1. MQTT CLIENT LOGIC (WIRELESS NETWORK) ---
 const mqttClient = mqtt.connect(BROKER_URL);
 
 mqttClient.on('connect', () => {
-    console.log("✅ Connected to MQTT Broker");
+    console.log("✅ Connected to MQTT Broker machine");
     mqttClient.subscribe(Object.values(TOPICS));
 });
 
 mqttClient.on('message', (topic, message) => {
     const payload = message.toString();
-    console.log(`[MQTT] Received: ${topic} -> ${payload}`);
+    console.log(`[MQTT] Received on ${topic} -> ${payload}`);
 
-    switch (topic) {
-        case TOPICS.GAUGE:
-            const val = Math.max(0, Math.min(100, parseFloat(payload) || 0));
-            io.emit('update-gauge', val);
-            break;
-        case TOPICS.TEXT:
-            io.emit('update-text', payload);
-            break;
-        case TOPICS.GIF:
-            io.emit('update-gif', payload);
-            break;
-    }
+    if (topic === TOPICS.GAUGE) forwardDataToScreen('GAUGE', payload);
+    if (topic === TOPICS.TEXT) forwardDataToScreen('TEXT', payload);
+    if (topic === TOPICS.GIF) forwardDataToScreen('GIF', payload);
 });
 
-// --- HTTP API ROUTES (BACKWARD COMPATIBILITY) ---
-app.get('/update-text/:text', (req, res) => {
-    io.emit('update-text', req.params.text);
-    res.send(`Text updated via HTTP\n`);
-});
 
-app.get('/update-gauge/:value', (req, res) => {
-    let value = Math.max(0, Math.min(100, parseFloat(req.params.value) || 0));
-    io.emit('update-gauge', value);
-    res.send(`Gauge updated via HTTP\n`);
-});
-
-app.get('/update-gif/:name', (req, res) => {
-    io.emit('update-gif', req.params.name);
-    res.send(`GIF updated via HTTP\n`);
-});
-
-app.get('/relay/:id/:state', (req, res) => {
-    const id = parseInt(req.params.id);
-    const state = req.params.state.toLowerCase();
-    
-    if (isNaN(id) || id < 1 || id > 4) {
-        return res.status(400).send("Invalid Relay ID. Use 1-4.\n");
-    }
-
-    const isOn = state === 'on';
-    if (bus) {
-        try {
-            const command = isOn ? 0xFF : 0x00; 
-            bus.writeByteSync(RELAY_ADDR, id, command);
-            console.log(`[I2C] Relay ${id} set to ${state}`);
-        } catch (err) {
-            return res.status(500).send(`I2C Error: ${err.message}\n`);
+// --- 2. PHYSICAL USB / SERIAL LOGIC ---
+try {
+    const port = new SerialPort({ path: USB_PORT_PATH, baudRate: 9600 }, (err) => {
+        if (err) {
+            console.warn(`⚠️ USB Hardware not connected (${USB_PORT_PATH}). Running in simulation mode.`);
         }
-    } else {
-        console.log(`[SIMULATION] Relay ${id} set to ${state}`);
-    }
+    });
 
-    res.json({ relay: id, status: state });
-});
+    // 🔴 THE FIX: Handle async error events so the server never crashes
+    port.on('error', (err) => {
+        // Suppress crash logs and gracefully log the error
+        console.log(`ℹ️ USB Connection status: Port disconnected or unavailable.`);
+    });
+
+    const parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+    
+    // Expecting incoming USB string format: "TYPE:VALUE"
+    parser.on('data', (data) => {
+        const cleanData = data.toString().trim();
+        console.log(`[USB Hardware] Incoming raw data: ${cleanData}`);
+
+        const separatorIndex = cleanData.indexOf(':');
+        if (separatorIndex === -1) return;
+
+        const type = cleanData.substring(0, separatorIndex);
+        const payload = cleanData.substring(separatorIndex + 1);
+
+        forwardDataToScreen(type, payload);
+    });
+
+} catch (error) {
+    console.warn("⚠️ Fatal Error initializing SerialPort instance:", error.message);
+}
+
 
 // --- START SERVER ---
 server.listen(PORT, () => {
-    console.log(`🚀 Kiosk Server running on http://localhost:${PORT}`);
-    console.log(`📡 Listening for MQTT messages from ESP32...`);
+    console.log(`\n🚀 Kiosk System operational on http://localhost:${PORT}`);
+    console.log(`🔒 Web page access restricted strictly to localhost.`);
+    console.log(`📥 Ready for data streams. Press 'g', 't', or 'f' followed by Enter to test UI hooks locally.\n`);
+});
+
+
+// --- 🔴 LOCAL KEYBOARD TESTING SIMULATOR ---
+process.stdin.setEncoding('utf8');
+process.stdin.on('data', (input) => {
+    const key = input.trim().toLowerCase();
+    
+    if (key === 'g') {
+        const fakeRandomGauge = Math.floor(Math.random() * 100);
+        console.log(`[SIMULATED DATA] Sending GAUGE:${fakeRandomGauge}`);
+        forwardDataToScreen('GAUGE', fakeRandomGauge);
+    }
+    if (key === 't') {
+        console.log(`[SIMULATED DATA] Sending TEXT:Washing Cycle Starting...`);
+        forwardDataToScreen('TEXT', 'Washing Cycle Starting...');
+    }
+    if (key === 'f') {
+        console.log(`[SIMULATED DATA] Sending GIF:demo`); // Matches your default html file name
+        forwardDataToScreen('GIF', 'demo');
+    }
 });

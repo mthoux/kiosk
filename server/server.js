@@ -7,9 +7,9 @@ const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 
 // --- CONFIGURATION ---
-const PORT = process.env.PORT || 3000;
-const BROKER_URL = 'mqtt://10.0.0.X'; // Replace with your computer's IP
-const USB_PORT_PATH = '/dev/ttyUSB0';  // Update to match your USB port (e.g., 'COM3' on Windows)
+const PORT = process.env.PORT;
+const BROKER_URL = process.env.BROKER_URL;
+const USB_PORT_PATH = process.env.USB_PORT_PATH;
 
 const TOPICS = {
     GAUGE: 'kiosk-update-gauge',
@@ -112,27 +112,4 @@ try {
 // --- START SERVER ---
 server.listen(PORT, () => {
     console.log(`\n🚀 Kiosk System operational on http://localhost:${PORT}`);
-    console.log(`🔒 Web page access restricted strictly to localhost.`);
-    console.log(`📥 Ready for data streams. Press 'g', 't', or 'f' followed by Enter to test UI hooks locally.\n`);
-});
-
-
-// --- 🔴 LOCAL KEYBOARD TESTING SIMULATOR ---
-process.stdin.setEncoding('utf8');
-process.stdin.on('data', (input) => {
-    const key = input.trim().toLowerCase();
-    
-    if (key === 'g') {
-        const fakeRandomGauge = Math.floor(Math.random() * 100);
-        console.log(`[SIMULATED DATA] Sending GAUGE:${fakeRandomGauge}`);
-        forwardDataToScreen('GAUGE', fakeRandomGauge);
-    }
-    if (key === 't') {
-        console.log(`[SIMULATED DATA] Sending TEXT:Washing Cycle Starting...`);
-        forwardDataToScreen('TEXT', 'Washing Cycle Starting...');
-    }
-    if (key === 'f') {
-        console.log(`[SIMULATED DATA] Sending GIF:demo`); // Matches your default html file name
-        forwardDataToScreen('GIF', 'demo');
-    }
 });

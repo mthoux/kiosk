@@ -1,52 +1,64 @@
 #!/bin/bash
 
-# --- CONFIGURATION ---
-DIR="/home/admin/kiosk"
-PORT=3000
-SCREEN_ROTATION=180
-LOG_RETENTION_DAYS=5
-# ---------------------
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$DIR/server/.env"
 
-# 1. Environment Setup (Ensures 'node' command works)
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-# 2. Log Configuration (YearMonthDay-HourMinute)
-mkdir -p "$DIR/logs"
-find "$DIR/logs" -name "log-*.txt" -mtime +$LOG_RETENTION_DAYS -delete
-LOG_FILE="$DIR/logs/log-$(date +'%Y%m%d-%H%M').txt"
-exec > "$LOG_FILE" 2>&1
-
-echo "--- Kiosk Startup: $(date) ---"
-echo "Configured Port: $PORT"
-
-# 3. Kill process on specified port if any
-echo "Cleaning up port $PORT..."
-fuser -k $PORT/tcp > /dev/null 2>&1
-
-# 4. Starting Node.js server
-echo "Starting Node.js server..."
-
-if command -v node >/dev/null 2>&1; then
-    # Passing the PORT as an environment variable to Node.js
-    PORT=$PORT node "$DIR/server/server.js" &
-    NODE_PID=$!
-    
-    sleep 5
-    
-    # Check if process is alive AND port is active
-    if ps -p $NODE_PID > /dev/null && lsof -i :$PORT > /dev/null; then
-        echo "SUCCESS: Node.js server is running (PID: $NODE_PID) on port $PORT"
-    else
-        echo "ERROR: Node.js server failed to start or port $PORT is unreachable"
-    fi
-else
-    echo "ERROR: 'node' command not found. Check NVM installation."
+if [ -d "$DIR/scripts" ]; then
+    chmod +x "$DIR/scripts"/*.sh 2>/dev/null
 fi
 
-# 5. Launching Display Environment
-echo "Launching Cage and Chromium..."
-export XDG_RUNTIME_DIR=/run/user/1000
-export WLR_DRM_NO_MODIFIERS=1
+clear
+echo "=================================================="
+echo "      🔍 KIOSK SYSTEM PRE-LAUNCH CHECKS           "
+echo "=================================================="
+echo ""
 
-exec cage -s -- bash -c "wlr-randr --output DSI-1 --transform $SCREEN_ROTATION; chromium-browser --kiosk --no-sandbox --user-data-dir='$DIR/.chrometemp' --password-store=basic --no-first-run --ignore-gpu-blocklist --enable-gpu-rasterization http://localhost:$PORT"
+echo "📡 Checking Network Gate..."
+
+# Fetch the active local IP address
+IP_ADDR=$(hostname -I | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+
+# Check if the Raspberry Pi actually has an assigned local IP
+if [ -n "$IP_ADDR" ]; then
+    CURRENT_USER=$(whoami)
+    
+    if command -v iwgetid >/dev/null 2>&1; then
+        WIFI_NAME=$(iwgetid -r)
+    elif command -v nmcli >/dev/null 2>&1; then
+        WIFI_NAME=$(nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2)
+    fi
+
+    if [ -z "$WIFI_NAME" ]; then
+        WIFI_NAME="Connected (Ethernet/Unknown)"
+    fi
+
+    echo "✅ Machine is ONLINE (Local Network)."
+    echo "   🌐 Network : $WIFI_NAME"
+    echo "   🆔 IP Addr : $IP_ADDR"
+    echo "   👤 User    : $CURRENT_USER"
+    echo "   💻 SSH Cmd : ssh ${CURRENT_USER}@${IP_ADDR}"
+else
+    echo "❌ Machine is OFFLINE. No network IP detected."
+    echo "➡️ Redirecting to Network configuration..."
+    sleep 2
+    bash "$DIR/scripts/setup_wifi.sh"
+fi
+
+echo ""
+
+echo "💾 Checking Software Gate..."
+if [ -f "$ENV_FILE" ]; then
+    echo "✅ Configuration profile (.env) found."
+else
+    echo "❌ Configuration profile (.env) is MISSING."
+    echo "➡️ Redirecting to Configuration profile..."
+    sleep 2
+    bash "$DIR/scripts/setup_env.sh"
+fi
+
+echo ""
+echo "--------------------------------------------------"
+echo "🚀 All systems verified. Launching Kiosk Interface..."
+sleep 1
+
+exec bash "$DIR/scripts/launch.sh"

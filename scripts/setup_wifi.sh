@@ -1,38 +1,33 @@
 #!/bin/bash
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-if [ "$EUID" -ne 0 ]; then
-    echo "🔐 This setup requires administrative privileges."
-    exec sudo "$0" "$@"
-fi
-
-echo "=================================================="
-echo "        📡 WIRELESS NETWORK PAIRING               "
-echo "=================================================="
-echo ""
 
 while true; do
-    read -p "🔹 Enter Wi-Fi Network Name (SSID): " WIFI_SSID
-    read -s -p "🔹 Enter Wi-Fi Password: " WIFI_PASS
+    clear
+    echo "=================================================="
+    echo "            WIRELESS NETWORK PAIRING              "
+    echo "=================================================="
+    read -p "Enter Wi-Fi SSID (or 'q' to quit): " ssid
+
+    ssid_lower=$(echo "$ssid" | tr '[:upper:]' '[:lower:]')
+    if [[ "$ssid_lower" == "q" ]]; then
+        echo "Exiting setup..."
+        exit 0
+    fi
+
+    read -s -p "Enter Wi-Fi Password: " pass
     echo ""
-    echo "📡 Connecting to Wi-Fi..."
-    
-    if nmcli dev wifi connect "$WIFI_SSID" password "$WIFI_PASS"; then
-        echo "✅ Wi-Fi successfully connected!"
-        break
+    echo "Attempting to connect..."
+
+    # Attempt connection
+    if nmcli dev wifi connect "$ssid" password "$pass" > /dev/null 2>&1; then
+        echo "Successfully connected to $ssid."
+        sleep 2
+        break # Exit the loop upon success
     else
-        echo "❌ Connection failed. Please check credentials and try again."
-        echo ""
+        echo "Connection failed. Please check your credentials."
+        read -p "Press any key to try again (or 'q' to quit)..." retry
+        retry_lower=$(echo "$retry" | tr '[:upper:]' '[:lower:]')
+        if [[ "$retry_lower" == "q" ]]; then
+            exit 0
+        fi
     fi
 done
-
-# Wait briefly for the interface to completely finish acquiring an IP address from DHCP
-sleep 2
-
-IP_ADDR=$(hostname -I | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-CURRENT_USER=$SUDO_USER
-[ -z "$CURRENT_USER" ] && CURRENT_USER=$(whoami)
-
-echo "   🆔 IP Addr : ${IP_ADDR:-Unknown}"
-echo "   💻 SSH Cmd : ssh ${CURRENT_USER}@${IP_ADDR:-IP_ADDRESS}"
-echo ""

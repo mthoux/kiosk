@@ -74,41 +74,6 @@ mqttClient.on('message', (topic, message) => {
 });
 
 
-// --- 2. PHYSICAL USB / SERIAL LOGIC ---
-try {
-    const port = new SerialPort({ path: USB_PORT_PATH, baudRate: 9600 }, (err) => {
-        if (err) {
-            console.warn(`⚠️ USB Hardware not connected (${USB_PORT_PATH}). Running in simulation mode.`);
-        }
-    });
-
-    // 🔴 THE FIX: Handle async error events so the server never crashes
-    port.on('error', (err) => {
-        // Suppress crash logs and gracefully log the error
-        console.log(`ℹ️ USB Connection status: Port disconnected or unavailable.`);
-    });
-
-    const parser = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
-    
-    // Expecting incoming USB string format: "TYPE:VALUE"
-    parser.on('data', (data) => {
-        const cleanData = data.toString().trim();
-        console.log(`[USB Hardware] Incoming raw data: ${cleanData}`);
-
-        const separatorIndex = cleanData.indexOf(':');
-        if (separatorIndex === -1) return;
-
-        const type = cleanData.substring(0, separatorIndex);
-        const payload = cleanData.substring(separatorIndex + 1);
-
-        forwardDataToScreen(type, payload);
-    });
-
-} catch (error) {
-    console.warn("⚠️ Fatal Error initializing SerialPort instance:", error.message);
-}
-
-
 // --- START SERVER ---
 server.listen(PORT, () => {
     console.log(`\n🚀 Kiosk System operational on http://localhost:${PORT}`);
